@@ -1,0 +1,18 @@
+{
+  "name": "sound-wave-component",
+  "version": "0.1.0",
+  "description": "React Native sound wave visualization component",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "react-native start"
+  },
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-native": ">=0.64.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-native": "^0.72.0",
+    "typescript": "^5.0.0"
+  }
+}
