@@ -195,10 +195,13 @@
   </div>
 
   <script>
-    const container = document.getElementById('soundWaveContainer');
+    const barsContainer = document.getElementById('soundWaveContainer');
+    const timelineContainer = document.getElementById('timelineContainer');
     const volumeSlider = document.getElementById('volumeSlider');
     const volumeValue = document.getElementById('volumeValue');
+    const timeValue = document.getElementById('timeValue');
     const autoButton = document.getElementById('autoButton');
+    const micButton = document.getElementById('micButton');
     
     const BAR_COUNT = 30;
     const MIN_HEIGHT = 12;
@@ -214,12 +217,24 @@
     let animationFrameId = null;
     
     function createBars() {
+      barsContainer.innerHTML = '';
       for (let i = 0; i < BAR_COUNT; i++) {
         const bar = document.createElement('div');
         bar.className = 'bar';
         bar.style.width = BAR_WIDTH + 'px';
         bar.style.height = MIN_HEIGHT + 'px';
-        container.appendChild(bar);
+        barsContainer.appendChild(bar);
+      }
+    }
+    
+    function createTimeline() {
+      timelineContainer.innerHTML = '';
+      for (let i = 0; i < BAR_COUNT; i++) {
+        const label = document.createElement('div');
+        label.className = 'time-label';
+        label.style.width = BAR_WIDTH + 'px';
+        label.textContent = '';
+        timelineContainer.appendChild(label);
       }
     }
     
@@ -231,20 +246,38 @@
       return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${tenths}`;
     }
 
+    function formatTimeForDisplay(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
     function updateBars(newVolume, isRecording = false) {
       let timeLabel = null;
       if (isRecording && recordingStartTime) {
         const elapsed = Date.now() - recordingStartTime;
         timeLabel = formatTime(elapsed);
+        timeValue.textContent = formatTimeForDisplay(elapsed);
       }
       
       volumes = [...volumes.slice(1), { value: newVolume, time: timeLabel }];
       
-      const bars = container.querySelectorAll('.bar');
+      const bars = barsContainer.querySelectorAll('.bar');
       bars.forEach((bar, index) => {
         const volume = volumes[index].value;
         const height = MIN_HEIGHT + volume * (MAX_HEIGHT - MIN_HEIGHT);
         bar.style.height = height + 'px';
+      });
+      
+      const timeLabels = timelineContainer.querySelectorAll('.time-label');
+      timeLabels.forEach((label, index) => {
+        const time = volumes[index].time;
+        if (time && index % TIME_LABEL_INTERVAL === 0) {
+          label.textContent = time;
+        } else {
+          label.textContent = '';
+        }
       });
       
       volumeValue.textContent = newVolume.toFixed(2);
@@ -294,6 +327,7 @@
     });
     
     createBars();
+    createTimeline();
     updateBars(0.5);
   </script>
 </body>
