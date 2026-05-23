@@ -1,5 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Animated } from 'react-native';
+
+export interface VolumeData {
+  value: number;
+  time: string | null;
+}
 
 interface UseSoundWaveOptions {
   visibleBarCount: number;
@@ -8,31 +13,32 @@ interface UseSoundWaveOptions {
 
 export const useSoundWave = (options: UseSoundWaveOptions) => {
   const { visibleBarCount, animationDuration } = options;
-  const [volumeHistory, setVolumeHistory] = useState<number[]>(
-    Array(visibleBarCount).fill(0)
+  const [volumes, setVolumes] = useState<VolumeData[]>(
+    Array(visibleBarCount).fill(null).map(() => ({ value: 0, time: null }))
   );
   const animatedValues = useRef<Animated.Value[]>(
     Array(visibleBarCount).fill(0).map(() => new Animated.Value(0))
   ).current;
 
-  const updateVolume = (newVolume: number) => {
-    setVolumeHistory(prev => {
-      const next = [...prev.slice(1), newVolume];
+  const updateVolume = useCallback((newVolume: number, timeLabel?: string) => {
+    setVolumes(prev => {
+      const next = [...prev.slice(1), { value: newVolume, time: timeLabel || null }];
       return next;
     });
-  };
+  }, []);
 
   useEffect(() => {
-    volumeHistory.forEach((volume, index) => {
+    volumes.forEach((vol, index) => {
       Animated.timing(animatedValues[index], {
-        toValue: volume,
+        toValue: vol.value,
         duration: animationDuration,
         useNativeDriver: false,
       }).start();
     });
-  }, [volumeHistory, animationDuration, animatedValues]);
+  }, [volumes, animationDuration, animatedValues]);
 
   return {
+    volumes,
     animatedValues,
     updateVolume,
   };
