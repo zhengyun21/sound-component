@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sound Wave Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background-color: #000;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    h1 {
+      color: #fff;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 40px;
+    }
+    
+    .container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 20px;
+    }
+    
+    .bar {
+      width: 4px;
+      background-color: #fff;
+      border-radius: 2px;
+      transition: height 0.1s ease-out;
+      min-height: 12px;
+    }
+    
+    .controls {
+      margin-top: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .volume-display {
+      color: #fff;
+      font-size: 16px;
+    }
+    
+    .volume-slider {
+      width: 200px;
+      height: 6px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #333;
+      border-radius: 3px;
+      outline: none;
+    }
+    
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    
+    .volume-slider::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+    
+    .auto-button {
+      padding: 10px 24px;
+      background-color: #fff;
+      color: #000;
+      border: none;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    
+    .auto-button:hover {
+      opacity: 0.8;
+    }
+    
+    .auto-button.active {
+      background-color: #4CAF50;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sound Wave Demo</h1>
+  
+  <div class="container" id="soundWaveContainer"></div>
+  
+  <div class="controls">
+    <div class="volume-display">Volume: <span id="volumeValue">0.00</span></div>
+    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">
+    <button class="auto-button" id="autoButton">Auto Mode</button>
+  </div>
+
+  <script>
+    const container = document.getElementById('soundWaveContainer');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const volumeValue = document.getElementById('volumeValue');
+    const autoButton = document.getElementById('autoButton');
+    
+    const BAR_COUNT = 30;
+    const MIN_HEIGHT = 12;
+    const MAX_HEIGHT = 58;
+    const BAR_WIDTH = 4;
+    const BAR_GAP = 6;
+    const TIME_LABEL_INTERVAL = 5;
+    
+    let autoMode = false;
+    let autoInterval = null;
+    let volumes = Array(BAR_COUNT).fill(0).map(() => ({ value: 0, time: null }));
+    let recordingStartTime = null;
+    let animationFrameId = null;
+    
+    function createBars() {
+      for (let i = 0; i < BAR_COUNT; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.width = BAR_WIDTH + 'px';
+        bar.style.height = MIN_HEIGHT + 'px';
+        container.appendChild(bar);
+      }
+    }
+    
+    function formatTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      const tenths = Math.floor((ms % 1000) / 100);
+      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${tenths}`;
+    }
+
+    function updateBars(newVolume, isRecording = false) {
+      let timeLabel = null;
+      if (isRecording && recordingStartTime) {
+        const elapsed = Date.now() - recordingStartTime;
+        timeLabel = formatTime(elapsed);
+      }
+      
+      volumes = [...volumes.slice(1), { value: newVolume, time: timeLabel }];
+      
+      const bars = container.querySelectorAll('.bar');
+      bars.forEach((bar, index) => {
+        const volume = volumes[index].value;
+        const height = MIN_HEIGHT + volume * (MAX_HEIGHT - MIN_HEIGHT);
+        bar.style.height = height + 'px';
+      });
+      
+      volumeValue.textContent = newVolume.toFixed(2);
+    }
+    
+    function startAutoMode() {
+      if (autoMode) return;
+      
+      autoMode = true;
+      autoButton.classList.add('active');
+      autoButton.textContent = 'Stop';
+      
+      autoInterval = setInterval(() => {
+        const randomVolume = Math.random();
+        updateBars(randomVolume);
+        volumeSlider.value = randomVolume;
+      }, 100);
+    }
+    
+    function stopAutoMode() {
+      if (!autoMode) return;
+      
+      autoMode = false;
+      autoButton.classList.remove('active');
+      autoButton.textContent = 'Auto Mode';
+      
+      if (autoInterval) {
+        clearInterval(autoInterval);
+        autoInterval = null;
+      }
+    }
+    
+    volumeSlider.addEventListener('input', (e) => {
+      if (autoMode) {
+        stopAutoMode();
+      }
+      const volume = parseFloat(e.target.value);
+      updateBars(volume);
+    });
+    
+    autoButton.addEventListener('click', () => {
+      if (autoMode) {
+        stopAutoMode();
+      } else {
+        startAutoMode();
+      }
+    });
+    
+    createBars();
+    updateBars(0.5);
+  </script>
+</body>
+</html>
