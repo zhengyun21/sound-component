@@ -37,9 +37,16 @@
 
     .bars-container {
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       gap: 6px;
-      height: 60px;
+      height: 120px;
+    }
+
+    .bar-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 4px;
     }
 
     .bar {
@@ -47,7 +54,6 @@
       background-color: #fff;
       border-radius: 2px;
       transition: height 0.1s ease-out;
-      min-height: 12px;
     }
 
     .timeline-container {
@@ -229,14 +235,27 @@
     
     function createBars() {
       barsContainer.innerHTML = '';
+      bars = [];
       for (let i = 0; i < BAR_COUNT; i++) {
-        const bar = document.createElement('div');
-        bar.className = 'bar';
-        bar.style.width = BAR_WIDTH + 'px';
-        bar.style.height = MIN_HEIGHT + 'px';
-        barsContainer.appendChild(bar);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'bar-wrapper';
+        
+        const barTop = document.createElement('div');
+        barTop.className = 'bar bar-top';
+        barTop.style.width = BAR_WIDTH + 'px';
+        barTop.style.height = MIN_HEIGHT / 2 + 'px';
+        
+        const barBottom = document.createElement('div');
+        barBottom.className = 'bar bar-bottom';
+        barBottom.style.width = BAR_WIDTH + 'px';
+        barBottom.style.height = MIN_HEIGHT / 2 + 'px';
+        
+        wrapper.appendChild(barTop);
+        wrapper.appendChild(barBottom);
+        barsContainer.appendChild(wrapper);
+        
+        bars.push({ top: barTop, bottom: barBottom });
       }
-      bars = barsContainer.querySelectorAll('.bar');
     }
     
     function createTimeline() {
@@ -274,10 +293,11 @@
       volumes.shift();
       volumes.push({ value: newVolume, time: timeLabel });
       
-      bars.forEach((bar, index) => {
+      bars.forEach((barPair, index) => {
         const volume = volumes[index].value;
-        const height = MIN_HEIGHT + volume * (MAX_HEIGHT - MIN_HEIGHT);
-        bar.style.height = height + 'px';
+        const halfHeight = MIN_HEIGHT / 2 + volume * ((MAX_HEIGHT - MIN_HEIGHT) / 2);
+        barPair.top.style.height = halfHeight + 'px';
+        barPair.bottom.style.height = halfHeight + 'px';
       });
       
       timeLabels.forEach((label, index) => {
