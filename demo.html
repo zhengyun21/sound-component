@@ -218,6 +218,15 @@
     let bars = [];
     let timeLabels = [];
     
+    let isRecording = false;
+    let audioContext = null;
+    let analyser = null;
+    let microphoneStream = null;
+    let dataArray = null;
+    let smoothedVolume = 0;
+    const NOISE_THRESHOLD = 0.05;
+    const SMOOTHING_FACTOR = 0.3;
+    
     function createBars() {
       barsContainer.innerHTML = '';
       for (let i = 0; i < BAR_COUNT; i++) {
@@ -310,6 +319,95 @@
       }
     }
     
+    async function startMicrophone() {
+      try {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        microphoneStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: false
+          }
+        });
+
+        const source = audioContext.createMediaStreamSource(microphoneStream);
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+
+        dataArray = new Float32Array(analyser.fftSize);
+
+        isRecording = true;
+        recordingStartTime = Date.now();
+        micButton.classList.add('recording');
+        micButton.textContent = '🔴';
+
+        stopAutoMode();
+        volumeSlider.disabled = true;
+        animate();
+      } catch (error) {
+        console.error('麦克风权限被拒绝:', error);
+        alert('无法获取麦克风权限，请允许使用麦克风后重试。\n\n将继续使用手动滑块模式。');
+      }
+    }
+    
+    function stopMicrophone() {
+      if (!isRecording) return;
+
+      isRecording = false;
+      micButton.classList.remove('recording');
+      micButton.textContent = '🎤';
+      volumeSlider.disabled = false;
+
+      if (microphoneStream) {
+        microphoneStream.getTracks().forEach(track => track.stop());
+        microphoneStream = null;
+      }
+
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+
+      smoothedVolume = 0;
+    }
+    
+    function calculateVolume() {
+      if (!analyser || !dataArray) return 0;
+
+      analyser.getFloatTimeDomainData(dataArray);
+
+      let sum = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        const amplitude = dataArray[i];
+        sum += amplitude * amplitude;
+      }
+
+      const rms = Math.sqrt(sum / dataArray.length);
+      const normalizedVolume = Math.min(rms * 3, 1);
+
+      if (normalizedVolume < NOISE_THRESHOLD) {
+        return 0;
+      }
+
+      smoothedVolume = smoothedVolume * SMOOTHING_FACTOR + normalizedVolume * (1 - SMOOTHING_FACTOR);
+
+      return smoothedVolume;
+    }
+    
+    function animate() {
+      if (!isRecording) return;
+
+      const volume = calculateVolume();
+      updateBars(volume, true);
+      volumeSlider.value = volume;
+
+      animationFrameId = requestAnimationFrame(animate);
+    }
+    
     volumeSlider.addEventListener('input', (e) => {
       if (autoMode) {
         stopAutoMode();
@@ -323,6 +421,14 @@
         stopAutoMode();
       } else {
         startAutoMode();
+      }
+    });
+    
+    micButton.addEventListener('click', () => {
+      if (isRecording) {
+        stopMicrophone();
+      } else {
+        startMicrophone();
       }
     });
     
