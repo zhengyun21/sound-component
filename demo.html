@@ -294,11 +294,13 @@
     
     function startAutoMode() {
       if (autoMode) return;
-      
+
+      stopMicrophone();
+
       autoMode = true;
       autoButton.classList.add('active');
       autoButton.textContent = 'Stop';
-      
+
       autoInterval = setInterval(() => {
         const randomVolume = Math.random();
         updateBars(randomVolume);
@@ -411,6 +413,9 @@
     volumeSlider.addEventListener('input', (e) => {
       if (autoMode) {
         stopAutoMode();
+      }
+      if (isRecording) {
+        stopMicrophone();
       }
       const volume = parseFloat(e.target.value);
       updateBars(volume);
