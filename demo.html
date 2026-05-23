@@ -215,6 +215,8 @@
     let volumes = Array(BAR_COUNT).fill(0).map(() => ({ value: 0, time: null }));
     let recordingStartTime = null;
     let animationFrameId = null;
+    let bars = [];
+    let timeLabels = [];
     
     function createBars() {
       barsContainer.innerHTML = '';
@@ -225,6 +227,7 @@
         bar.style.height = MIN_HEIGHT + 'px';
         barsContainer.appendChild(bar);
       }
+      bars = barsContainer.querySelectorAll('.bar');
     }
     
     function createTimeline() {
@@ -236,6 +239,7 @@
         label.textContent = '';
         timelineContainer.appendChild(label);
       }
+      timeLabels = timelineContainer.querySelectorAll('.time-label');
     }
     
     function formatTime(ms) {
@@ -247,10 +251,7 @@
     }
 
     function formatTimeForDisplay(ms) {
-      const totalSeconds = Math.floor(ms / 1000);
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      return formatTime(ms).slice(0, 5);
     }
 
     function updateBars(newVolume, isRecording = false) {
@@ -261,16 +262,15 @@
         timeValue.textContent = formatTimeForDisplay(elapsed);
       }
       
-      volumes = [...volumes.slice(1), { value: newVolume, time: timeLabel }];
+      volumes.shift();
+      volumes.push({ value: newVolume, time: timeLabel });
       
-      const bars = barsContainer.querySelectorAll('.bar');
       bars.forEach((bar, index) => {
         const volume = volumes[index].value;
         const height = MIN_HEIGHT + volume * (MAX_HEIGHT - MIN_HEIGHT);
         bar.style.height = height + 'px';
       });
       
-      const timeLabels = timelineContainer.querySelectorAll('.time-label');
       timeLabels.forEach((label, index) => {
         const time = volumes[index].time;
         if (time && index % TIME_LABEL_INTERVAL === 0) {
