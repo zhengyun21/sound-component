@@ -122,12 +122,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     height: 120,
+    justifyContent: 'center',
   } as ViewStyle,
   timelineContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     height: 20,
     marginTop: 8,
+    justifyContent: 'center',
   } as ViewStyle,
   timelineLabel: {
     textAlign: 'center',

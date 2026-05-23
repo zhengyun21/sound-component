@@ -16,27 +16,53 @@ export const SoundBar: React.FC<SoundBarProps> = ({
   maxBarHeight,
   barColor,
 }) => {
-  const height = animatedHeight.interpolate({
+  const halfMinHeight = minBarHeight / 2;
+  const halfMaxHeight = maxBarHeight / 2;
+  const maxAmplitude = halfMaxHeight - halfMinHeight;
+
+  const topHeight = animatedHeight.interpolate({
     inputRange: [0, 1],
-    outputRange: [minBarHeight, maxBarHeight],
+    outputRange: [halfMinHeight, halfMinHeight + maxAmplitude],
+  });
+
+  const bottomHeight = animatedHeight.interpolate({
+    inputRange: [0, 1],
+    outputRange: [halfMinHeight, halfMinHeight + maxAmplitude],
   });
 
   return (
-    <Animated.View
-      style={[
-        styles.bar,
-        {
-          width: barWidth,
-          height,
-          backgroundColor: barColor,
-        },
-      ]}
-    />
+    <>
+      <Animated.View
+        style={[
+          styles.barTop,
+          {
+            width: barWidth,
+            height: topHeight,
+            backgroundColor: barColor,
+          },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.barBottom,
+          {
+            width: barWidth,
+            height: bottomHeight,
+            backgroundColor: barColor,
+          },
+        ]}
+      />
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  bar: {
-    borderRadius: 2,
+  barTop: {
+    borderTopLeftRadius: 2,
+    borderTopRightRadius: 2,
+  } as ViewStyle,
+  barBottom: {
+    borderBottomLeftRadius: 2,
+    borderBottomRightRadius: 2,
   } as ViewStyle,
 });
