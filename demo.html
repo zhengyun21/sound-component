@@ -28,19 +28,42 @@
       margin-bottom: 40px;
     }
     
-    .container {
+    .wave-container {
       display: flex;
-      align-items: center;
-      gap: 6px;
+      flex-direction: column;
+      gap: 8px;
       padding: 20px;
     }
-    
+
+    .bars-container {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 60px;
+    }
+
     .bar {
       width: 4px;
       background-color: #fff;
       border-radius: 2px;
       transition: height 0.1s ease-out;
       min-height: 12px;
+    }
+
+    .timeline-container {
+      display: flex;
+      gap: 6px;
+      height: 20px;
+      align-items: center;
+    }
+
+    .time-label {
+      width: 4px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 10px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: visible;
     }
     
     .controls {
@@ -105,17 +128,68 @@
       background-color: #4CAF50;
       color: #fff;
     }
+
+    .time-display {
+      color: #fff;
+      font-size: 16px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+    }
+
+    .mic-button {
+      width: 48px;
+      height: 48px;
+      background-color: #fff;
+      color: #000;
+      border: none;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mic-button:hover {
+      opacity: 0.8;
+    }
+
+    .mic-button.recording {
+      background-color: #ff3b30;
+      color: #fff;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+    }
   </style>
 </head>
 <body>
   <h1>Sound Wave Demo</h1>
-  
-  <div class="container" id="soundWaveContainer"></div>
-  
+
+  <div class="wave-container">
+    <div class="bars-container" id="soundWaveContainer"></div>
+    <div class="timeline-container" id="timelineContainer"></div>
+  </div>
+
   <div class="controls">
     <div class="volume-display">Volume: <span id="volumeValue">0.00</span></div>
+    <div class="time-display">Time: <span id="timeValue">00:00</span></div>
     <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">
-    <button class="auto-button" id="autoButton">Auto Mode</button>
+    <div class="button-group">
+      <button class="mic-button" id="micButton">🎤</button>
+      <button class="auto-button" id="autoButton">Auto Mode</button>
+    </div>
   </div>
 
   <script>
